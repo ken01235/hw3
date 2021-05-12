@@ -322,13 +322,20 @@ BUILD/B_L4S5I_IOT01A/GCC_ARM-TFLITE/main.o: main.cpp \
  /home/ee2405/ee2405/mbed-os-build/hal/include/hal/mpu_api.h \
  /home/ee2405/ee2405/mbed-os-build/platform/include/platform/ScopedRamExecutionLock.h \
  /home/ee2405/ee2405/mbed-os-build/platform/include/platform/mbed_stats.h \
- accelerometer_handler.h tensorflowlite_mbed/tensorflow/lite/c/common.h \
+ mbed_rpc/mbed_rpc/mbed_rpc.h mbed_rpc/mbed_rpc/rpc.h \
+ mbed_rpc/mbed_rpc/Arguments.h \
+ /home/ee2405/ee2405/mbed-os-build/connectivity/mbedtls/include/mbedtls/platform.h \
+ mbed_rpc/mbed_rpc/RPCVariable.h mbed_rpc/mbed_rpc/RPCFunction.h \
+ mbed_rpc/mbed_rpc/RpcClasses.h accelerometer_handler.h \
+ tensorflowlite_mbed/tensorflow/lite/c/common.h \
  tensorflowlite_mbed/tensorflow/lite/micro/micro_error_reporter.h \
  tensorflowlite_mbed/tensorflow/lite/core/api/error_reporter.h \
  tensorflowlite_mbed/tensorflow/lite/micro/compatibility.h \
  tensorflowlite_mbed/tensorflow/lite/micro/debug_log.h \
  tensorflowlite_mbed/tensorflow/lite/micro/debug_log_numbers.h config.h \
- magic_wand_model_data.h \
+ magic_wand_model_data.h 4dgl-ulcd-se/uLCD_4DGL.h \
+ /home/ee2405/ee2405/mbed-os-build/platform/include/platform/Stream.h \
+ /home/ee2405/ee2405/mbed-os-build/platform/include/platform/FileLike.h \
  tensorflowlite_mbed/tensorflow/lite/micro/kernels/micro_ops.h \
  tensorflowlite_mbed/tensorflow/lite/micro/micro_interpreter.h \
  tensorflowlite_mbed/tensorflow/lite/core/api/op_resolver.h \

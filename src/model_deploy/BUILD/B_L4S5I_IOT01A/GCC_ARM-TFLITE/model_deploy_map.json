@@ -2,9 +2,9 @@
     {
         "module": "../..",
         "size": {
-            ".text": 29768,
+            ".text": 37678,
             ".data": 444,
-            ".bss": 7894,
+            ".bss": 8022,
             ".text-delta": 0,
             ".data-delta": 0,
             ".bss-delta": 0
@@ -13,10 +13,10 @@
     {
         "module": "BUILD/B_L4S5I_IOT01A",
         "size": {
-            ".text": 24318,
-            ".data": 293,
-            ".bss": 64430,
-            ".text-delta": 0,
+            ".text": 26632,
+            ".data": 309,
+            ".bss": 65810,
+            ".text-delta": 48,
             ".data-delta": 0,
             ".bss-delta": 0
         }
@@ -24,10 +24,10 @@
     {
         "module": "[fill]",
         "size": {
-            ".text": 158,
+            ".text": 182,
             ".data": 10,
-            ".bss": 31,
-            ".text-delta": 0,
+            ".bss": 35,
+            ".text-delta": -48,
             ".data-delta": 0,
             ".bss-delta": 0
         }
@@ -35,7 +35,7 @@
     {
         "module": "[lib]/c.a",
         "size": {
-            ".text": 29088,
+            ".text": 32380,
             ".data": 2472,
             ".bss": 89,
             ".text-delta": 0,
@@ -46,7 +46,7 @@
     {
         "module": "[lib]/gcc.a",
         "size": {
-            ".text": 3436,
+            ".text": 3596,
             ".data": 0,
             ".bss": 0,
             ".text-delta": 0,
@@ -100,9 +100,9 @@
     },
     {
         "summary": {
-            "static_ram": 75712,
+            "static_ram": 77240,
             "static_ram_delta": 0,
-            "total_flash": 92796,
+            "total_flash": 106512,
             "total_flash_delta": 0
         }
     }

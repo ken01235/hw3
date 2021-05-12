@@ -1,7 +1,9 @@
 #include "mbed.h"
+#include "mbed_rpc.h"
 #include "accelerometer_handler.h"
 #include "config.h"
 #include "magic_wand_model_data.h"
+#include "uLCD_4DGL.h"
 
 #include "tensorflow/lite/c/common.h"
 #include "tensorflow/lite/micro/kernels/micro_ops.h"
@@ -11,11 +13,52 @@
 #include "tensorflow/lite/schema/schema_generated.h"
 #include "tensorflow/lite/version.h"
 
+DigitalOut myled1(LED1);
+DigitalOut myled2(LED2);
+BufferedSerial pc(USBTX, USBRX);
+void gestureUI(Arguments *in, Reply *out);
+RPCFunction rpcGuesture(&gestureUI, "gesture");
+void display(int);
+void selectfreq(void);
+int  PredictGesture(float*);
+int selection = 180;
 constexpr int kTensorArenaSize = 60 * 1024;
 uint8_t tensor_arena[kTensorArenaSize];
+uLCD_4DGL uLCD(D1, D0, D2); // serial tx, serial rx, reset pin;
 
-void display(int);
-int selection = 180;
+// int main(void) {
+//     char buf[256], outbuf[256];
+// 
+//     FILE *devin = fdopen(&pc, "r");
+//     FILE *devout = fdopen(&pc, "w");
+// 
+//     while(1) {
+//         memset(buf, 0, 256);
+//         for (int i = 0; ; i++) {
+//             char recv = fgetc(devin);
+//             if (recv == '\n') {
+//                 printf("\r\n");
+//                 break;
+//             }
+//             buf[i] = fputc(recv, devout);
+//         }
+//         //Call the static call method on the RPC class
+//         RPC::call(buf, outbuf);
+//         printf("%s\r\n", outbuf);
+//     }
+// }
+// 
+// void gestureUI(Arguments *in, Reply *out)
+// {
+//     myled1 = 1;
+//     myled2 = 0;
+//     EventQueue queue;
+//     Thread t;
+//     t.start(callback(&queue, &EventQueue::dispatch_forever));
+//     queue.event(selectfreq);
+// }
+
+
 
 int PredictGesture(float* output) {
     static int continuous_count = 0;
@@ -48,9 +91,8 @@ int PredictGesture(float* output) {
     return this_predict;
 }
 
-void selectfreq(void) {
+int main(void) {
 
-    // Whether we should clear the buffer next time we fetch data
     bool should_clear_buffer = false;
     bool got_data = false;
 
@@ -65,7 +107,7 @@ void selectfreq(void) {
                                "Model provided is schema version %d not equal "
                                "to supported version %d.",
                                model->version(), TFLITE_SCHEMA_VERSION);
-        return ;
+        return -1;
     }
 
     static tflite::MicroOpResolver<6> micro_op_resolver;
@@ -94,7 +136,7 @@ void selectfreq(void) {
         (model_input->dims->data[2] != kChannelNumber) ||
         (model_input->type != kTfLiteFloat32)) {
         error_reporter->Report("Bad input tensor parameters in model");
-        return ;
+        return -1;
     }
 
     int input_length = model_input->bytes / sizeof(float);
@@ -102,7 +144,7 @@ void selectfreq(void) {
     TfLiteStatus setup_status = SetupAccelerometer(error_reporter);
     if (setup_status != kTfLiteOk) {
         error_reporter->Report("Set up failed\n");
-        return ;
+        return -1;
     }
 
     error_reporter->Report("Set up successful...\n");
@@ -129,17 +171,19 @@ void selectfreq(void) {
 
         if (gesture_index < label_num) {
             error_reporter->Report(config.output_message[gesture_index]);
+            myled1 = 0;
+            myled2 = 1;
             selection = (label_num + 1) * 45;
+            uLCD.printf("selection");
             display(selection);
         }
     }
 }
 
 void display(int num) {
-    printf("%d", num);
+    uLCD.cls();
+    uLCD.text_width(4);
+    uLCD.text_height(4);
+    uLCD.printf("%d\n", num); //Default Green on black text
 }
 
-int main(void) {
-    Thread t;
-    t.start(selectfreq);
-}
