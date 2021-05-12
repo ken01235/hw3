@@ -18,16 +18,31 @@ DigitalOut myled2(LED2);
 InterruptIn btn(USER_BUTTON);
 BufferedSerial pc(USBTX, USBRX);
 void gestureUI(Arguments *in, Reply *out);
+void tiltUI(Arguments *in, Reply *out);
 RPCFunction rpcGuesture(&gestureUI, "gesture");
 void display(int);
 void selectfreq(void);
 int  PredictGesture(float*);
+void selectfreq_terminate(void);
+int terminate1 = 0;
 int angelDetect(void);
 int selection = 180;
 constexpr int kTensorArenaSize = 60 * 1024;
 uint8_t tensor_arena[kTensorArenaSize];
 uLCD_4DGL uLCD(D1, D0, D2); // serial tx, serial rx, reset pin;
 Thread t;
+Thread t2;
+WiFiInterface *wifi;
+volatile int message_num = 0;
+volatile int arrivedcount = 0;
+volatile bool closed = false;
+const char* topic = "Mbed";
+int16_t pDataXYZ[3] = {0};
+Thread mqtt_thread(osPriorityHigh);
+EventQueue mqtt_queue;
+void messageArrived(MQTT::MessageData& md);
+void publish_message(MQTT::Client<MQTTNetwork, Countdown>* client);
+void close_mqtt();
 
 int main(void) {
     char buf[256], outbuf[256];
@@ -55,10 +70,14 @@ void gestureUI(Arguments *in, Reply *out)
 {
     myled1 = 1;
     t.start(selectfreq);
-
+    btn.rise(selectfreq_terminate);
+    if (btn) myled1 = 0;
 }
 
-
+int tiltUI(Arguments *in, Reply *out){
+    myled2 = 1;
+    t2.start(angelDetect);
+}
 
 int PredictGesture(float* output) {
     static int continuous_count = 0;
@@ -181,6 +200,7 @@ void selectfreq(void) {
             }
         }
     }
+    if (terminate1) return;
 }
 
 void display(int num) {
@@ -189,3 +209,40 @@ void display(int num) {
     uLCD.printf("%d\n", num); //Default Green on black text
 }
 
+void messageArrived(MQTT::MessageData& md) {
+    MQTT::Message &message = md.message;
+    char msg[300];
+    sprintf(msg, "Message arrived: QoS%d, retained %d, dup %d, packetID %d\r\n", message.qos, message.retained, message.dup, message.id);
+    printf(msg);
+    ThisThread::sleep_for(1000ms);
+    char payload[300];
+    sprintf(payload, "Payload %.*s\r\n", message.payloadlen, (char*)message.payload);
+    printf(payload);
+    ++arrivedcount;
+}
+
+void publish_message(MQTT::Client<MQTTNetwork, Countdown>* client) {
+    BSP_ACCELERO_Init();
+    BSP_ACCELERO_AccGetXYZ(pDataXYZ);
+    message_num++;
+    MQTT::Message message;
+    char buff[100];
+    sprintf(buff, "x: %d, y: %d, z: %d\n", pDataXYZ[0], pDataXYZ[1], pDataXYZ[2]);
+    message.qos = MQTT::QOS0;
+    message.retained = false;
+    message.dup = false;
+    message.payload = (void*) buff;
+    message.payloadlen = strlen(buff) + 1;
+    int rc = client->publish(topic, message);
+
+    printf("rc:  %d\r\n", rc);
+    printf("Puslish message: %s\r\n", buff);
+}
+
+void close_mqtt() {
+    closed = true;
+}
+
+void selectfreq_terminate(void){
+    terminate1 = 1;
+}
