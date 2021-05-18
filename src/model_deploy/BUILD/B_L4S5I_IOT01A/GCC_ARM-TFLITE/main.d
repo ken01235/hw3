@@ -336,6 +336,22 @@ BUILD/B_L4S5I_IOT01A/GCC_ARM-TFLITE/main.o: main.cpp \
  magic_wand_model_data.h 4dgl-ulcd-se/uLCD_4DGL.h \
  /home/ee2405/ee2405/mbed-os-build/platform/include/platform/Stream.h \
  /home/ee2405/ee2405/mbed-os-build/platform/include/platform/FileLike.h \
+ wifi_mqtt/MQTTNetwork.h \
+ /home/ee2405/ee2405/mbed-os-build/connectivity/netsocket/include/netsocket/NetworkInterface.h \
+ wifi_mqtt/MQTT/MQTTmbed.h wifi_mqtt/MQTT/MQTTClient.h \
+ wifi_mqtt/MQTT/FP/FP.h wifi_mqtt/MQTT/MQTTPacket/MQTTPacket.h \
+ wifi_mqtt/MQTT/MQTTPacket/MQTTConnect.h \
+ wifi_mqtt/MQTT/MQTTPacket/MQTTPublish.h \
+ wifi_mqtt/MQTT/MQTTPacket/MQTTSubscribe.h \
+ wifi_mqtt/MQTT/MQTTPacket/MQTTUnsubscribe.h \
+ wifi_mqtt/MQTT/MQTTPacket/MQTTFormat.h \
+ wifi_mqtt/MQTT/MQTTPacket/StackTrace.h \
+ wifi_mqtt/MQTT/MQTTPacket/MQTTPacket.h wifi_mqtt/MQTT/MQTTLogging.h \
+ BSP_B-L475E-IOT01/Drivers/BSP/B-L475E-IOT01/stm32l475e_iot01_accelero.h \
+ BSP_B-L475E-IOT01/Drivers/BSP/B-L475E-IOT01/stm32l475e_iot01.h \
+ BSP_B-L475E-IOT01/Drivers/BSP/B-L475E-IOT01/../Components/lsm6dsl/lsm6dsl.h \
+ BSP_B-L475E-IOT01/Drivers/BSP/B-L475E-IOT01/../Components/lsm6dsl/../Common/accelero.h \
+ BSP_B-L475E-IOT01/Drivers/BSP/B-L475E-IOT01/../Components/lsm6dsl/../Common/gyro.h \
  tensorflowlite_mbed/tensorflow/lite/micro/kernels/micro_ops.h \
  tensorflowlite_mbed/tensorflow/lite/micro/micro_interpreter.h \
  tensorflowlite_mbed/tensorflow/lite/core/api/op_resolver.h \
