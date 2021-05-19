@@ -35,15 +35,15 @@ print("Connecting to " + host + "/" + topic)
 mqttc.connect(host, port=1883, keepalive=60)
 mqttc.subscribe(topic, 0)
 
-# Publish messages from Python
-num = 0
-while num != 5:
-    ret = mqttc.publish(topic, "Message from Python!\n", qos=0)
-    if (ret[0] != 0):
-            print("Publish failed")
-    mqttc.loop()
-    time.sleep(1.5)
-    num += 1
+# # Publish messages from Python
+# num = 0
+# while num != 5:
+#     ret = mqttc.publish(topic, "Message from Python!\n", qos=0)
+#     if (ret[0] != 0):
+#             print("Publish failed")
+#     mqttc.loop()
+#     time.sleep(1.5)
+#     num += 1
 
 # Loop forever, receiving messages
 mqttc.loop_forever()

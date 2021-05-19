@@ -1,3 +1,4 @@
+#include <math.h>
 #include "mbed.h"
 #include "mbed_rpc.h"
 #include "accelerometer_handler.h"
@@ -24,12 +25,14 @@ BufferedSerial pc(USBTX, USBRX);
 void gestureUI(Arguments *in, Reply *out);
 void tiltUI(Arguments *in, Reply *out);
 RPCFunction rpcGuesture(&gestureUI, "gesture");
+RPCFunction rpcTilt(&tiltUI, "tilt");
 void selectfreq(void);
 int  PredictGesture(float*);
-void selectfreq_terminate(MQTT::Client<MQTTNetwork, Countdown>* client);
-int selection = 180;
+void selectfreq_terminate();
+int THangle = 180;
 int terminate1 = 0;
-int angelDetect(void);
+int terminate2 = 0;
+void angleDetect(void);
 constexpr int kTensorArenaSize = 60 * 1024;
 uint8_t tensor_arena[kTensorArenaSize];
 uLCD_4DGL uLCD(D1, D0, D2);
@@ -43,8 +46,9 @@ const char* topic = "Mbed";
 Thread mqtt_thread(osPriorityHigh);
 EventQueue mqtt_queue;
 void messageArrived(MQTT::MessageData& md);
-void publish_message(MQTT::Client<MQTTNetwork, Countdown>* client);
+void publish_message(int, float);
 void close_mqtt();
+MQTT::Client<MQTTNetwork, Countdown> *client;
 
 int main(void) {
 
@@ -63,10 +67,11 @@ int main(void) {
 
     NetworkInterface* net = wifi;
     MQTTNetwork mqttNetwork(net);
-    MQTT::Client<MQTTNetwork, Countdown> client(mqttNetwork);
+    MQTT::Client<MQTTNetwork, Countdown> client1(mqttNetwork);
+    client = &client1;
 
     //TODO: revise host to your IP
-    const char* host = "192.168.253.132";
+    const char* host = "192.168.43.177";
     printf("Connecting to TCP network...\r\n");
 
     SocketAddress sockAddr;
@@ -86,22 +91,17 @@ int main(void) {
     data.MQTTVersion = 3;
     data.clientID.cstring = "Mbed";
 
-    if ((rc = client.connect(data)) != 0){
+    if ((rc = client1.connect(data)) != 0){
         printf("Fail to connect MQTT\r\n");
     }
-    if (client.subscribe(topic, MQTT::QOS0, messageArrived) != 0){
+    if (client1.subscribe(topic, MQTT::QOS0, messageArrived) != 0){
         printf("Fail to subscribe\r\n");
     }
 
     mqtt_thread.start(callback(&mqtt_queue, &EventQueue::dispatch_forever));
-    btn.rise(mqtt_queue.event(&selectfreq_terminate, &client));
+    btn.rise(mqtt_queue.event(&selectfreq_terminate));
     //btn3.rise(&close_mqtt);
 
-    int num = 0;
-    while (num != 5) {
-        client.yield(100);
-        ++num;
-    }
     char buf[256], outbuf[256];
 
     FILE *devin = fdopen(&pc, "r");
@@ -123,14 +123,21 @@ int main(void) {
 }
 
 void gestureUI(Arguments *in, Reply *out) {
+    int first = 1;
     myled1 = 1;
-    t.start(selectfreq);
-    if (btn) myled1 = 0;
+    terminate1 = 0;
+    if(first)
+        t.start(selectfreq);
+    return;
 }
 
-void tiltUI(Arguments *in, Reply *out){
+void tiltUI(Arguments *in, Reply *out) {
+    int first = 1;
     myled2 = 1;
-    t2.start(angelDetect);
+    terminate2 = 0;
+    if (first)
+        t2.start(angleDetect);
+    return;
 }
 
 int PredictGesture(float* output) {
@@ -249,21 +256,20 @@ void selectfreq(void) {
 
             if (gesture_index < label_num) {
                 //error_reporter->Report(config.output_message[gesture_index]);
-                selection = (gesture_index + 1) * 45;
+                THangle = (gesture_index + 1) * 45;
                 uLCD.cls();
                 uLCD.text_width(2);
                 uLCD.text_height(2);
                 uLCD.printf("selection:\n");
                 uLCD.text_width(3);
                 uLCD.text_height(3);
-                uLCD.printf("%d\n", selection);
+                uLCD.printf("%d\n", THangle);
             }
-            if (terminate1) return;
+            while (terminate1) {
+                ThisThread::sleep_for(100ms);
+            }
         }
     }
-}
-
-void display(int num) {
 }
 
 void messageArrived(MQTT::MessageData& md) {
@@ -278,11 +284,15 @@ void messageArrived(MQTT::MessageData& md) {
     ++arrivedcount;
 }
 
-void publish_message(MQTT::Client<MQTTNetwork, Countdown>* client) {
+void publish_message(int mode, float data) {
+    if (mode == 1 && terminate1) return;
     message_num++;
     MQTT::Message message;
     char buff[100];
-    sprintf(buff, "%d\n", selection);
+    if (mode == 1)
+        sprintf(buff, "The threshold angle is: %d\n", (int)data);
+    else if (mode == 2)
+        sprintf(buff, "The last angle is: %10.6lf\n", data);
     message.qos = MQTT::QOS0;
     message.retained = false;
     message.dup = false;
@@ -292,13 +302,42 @@ void publish_message(MQTT::Client<MQTTNetwork, Countdown>* client) {
 
     printf("rc:  %d\r\n", rc);
     printf("Puslish message: %s\r\n", buff);
+
 }
 
 void close_mqtt() {
     closed = true;
 }
 
-void selectfreq_terminate(MQTT::Client<MQTTNetwork, Countdown>* client){
+void selectfreq_terminate() {
+    publish_message(1, (float)THangle);
     terminate1 = 1;
-    publish_message(client);
+    myled1 = 0;
+}
+
+void angleDetect() {
+    int16_t XYZ[3] = {0};
+    BSP_ACCELERO_Init();
+    while (true){
+        BSP_ACCELERO_AccGetXYZ(XYZ);
+        float a = sqrt(XYZ[0] * XYZ[0] + XYZ[1] * XYZ[1]);
+        float b = XYZ[2];
+        float angle = atan(a / b) * 180 / 3.1415926;
+        if (angle < 0.0)
+            angle = angle + 180.0;
+        else if (angle > 180.0)
+            angle = angle - 180.0;
+        //printf("angle: %10.6lf\n", angle);
+        if (angle >= THangle) {
+            terminate2 = 1;
+        }
+        if (terminate2) {
+            publish_message(2, angle);
+            myled2 = 0;
+            while (terminate2) {
+                ThisThread::sleep_for(100ms);
+            }
+        }
+        ThisThread::sleep_for(100ms);
+    }
 }
